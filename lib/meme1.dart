@@ -28,17 +28,22 @@ class MemePage extends StatefulWidget {
 }
 
 class _MemePageState extends State<MemePage> {
-  late Future<album.Album> f;//late=> fetched only when used for first time
-  @override
+  // late Future<album.Album> f;
+  // //late=> fetched only when used for first time
+  // @override
   
-  void initState(){
-     super.initState();
-     f = fetchAlbum(1);
-  }
+  // void initState(){
+  //    super.initState();
+
+  //    f = fetchAlbum(1);
+  // }
   @override
   Widget build(BuildContext context) {
   var homestate = context.watch<main.MyHomePageState>();
   var theme = Theme.of(context);
+  var style = theme.textTheme.titleLarge!.copyWith(
+    color: theme.colorScheme.onPrimary,
+  );
   var b = homestate.list;
     return Scaffold(
       appBar: AppBar(
@@ -48,23 +53,71 @@ class _MemePageState extends State<MemePage> {
       ),
       body:SafeArea(
         child:Center(
-          child: FutureBuilder<album.Album>(
-            future: f,
-            builder: (context,snapshot){
-              if(snapshot.hasData){
-                if(snapshot.data!.success == false){
-                  return Text('${snapshot.error}');
-                }else {
-                return Text(snapshot.data!.name);}
-              }else if(snapshot.hasError){
-                return Text('${snapshot.error}');
-              }
-              return const CircularProgressIndicator();
-            }),
+          child: ListView(children: [
+            if(b.isEmpty) Padding(
+              padding: const EdgeInsets.only(top: 200),
+              child: Center(child: Card(color: theme.colorScheme.primary,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text("Add Favourites",
+                            style: style,),),),),
+            ),
+            for(var i in b)
+            Meme(i),
+          ]),
         ))
     ) ;
   }
 }
 
-
+class Meme extends StatelessWidget{
+    Meme(this.i);
+   final int i;
+  @override
+  Widget build(BuildContext context) {
+    var homestate = context.watch<main.MyHomePageState>();
+  var theme = Theme.of(context);
+  var style = theme.textTheme.titleLarge!.copyWith(
+    color: theme.colorScheme.onPrimary,
+  );
+  var b = homestate.list;
+    return FutureBuilder<album.Album>(
+            future: fetchAlbum(i),
+            builder: (context,snapshot){
+              if(snapshot.hasData){
+                if(snapshot.data!.success == false){
+                  return Text('Invalid Favourite');
+                }else {
+                return SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                         border: Border.all(color: Colors.black,width: 5)
+                        ),
+                        child: Image(image:NetworkImage(snapshot.data!.url),
+                        width: snapshot.data!.width,
+                        height: snapshot.data!.height,),
+                      ),
+                      Card(
+                        color: theme.colorScheme.primary,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(snapshot.data!.name,
+                          style: style,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );}
+                //here
+              }else if(snapshot.hasError){
+                return Text('${snapshot.error}');
+              }
+              return const CircularProgressIndicator();
+            });
+  }
+}
 
